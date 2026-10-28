@@ -1,0 +1,92 @@
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Orange.app and publish release
+    runs-on: macos-15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s "$(ls -d /Applications/Xcode_16*.app | sort -V | tail -1)"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen xcbeautify
+
+      - name: Compute version
+        id: version
+        run: |
+          VERSION=$(sed -n 's/^ *CFBundleShortVersionString: *"\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' project.yml | head -1)
+          [ -n "$VERSION" ] || { echo "could not read CFBundleShortVersionString from project.yml"; exit 1; }
+          BUILD=${{ github.run_number }}
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION-$BUILD" >> "$GITHUB_OUTPUT"
+          echo "Building Orange $VERSION ($BUILD)"
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build (Release)
+        run: |
+          xcodebuild \
+            -project Orange.xcodeproj \
+            -scheme Orange \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CURRENT_PROJECT_VERSION=${{ steps.version.outputs.build }} \
+            build | xcbeautify --renderer github-actions || exit ${PIPESTATUS[0]}
+
+      - name: Ad-hoc sign and package
+        id: package
+        run: |
+          APP=build/Build/Products/Release/Orange.app
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ steps.version.outputs.build }}" "$APP/Contents/Info.plist"
+          codesign --force --deep --sign - "$APP"
+          codesign --verify --deep --strict "$APP"
+          "$APP/Contents/MacOS/Orange" --list | head -5
+          ZIP="Orange-${{ steps.version.outputs.version }}-${{ steps.version.outputs.build }}.zip"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "$ZIP"
+          shasum -a 256 "$ZIP" > "$ZIP.sha256"
+          echo "zip=$ZIP" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        run: |
+          TAG="${{ steps.version.outputs.tag }}"
+          ZIP="${{ steps.package.outputs.zip }}"
+          SHA=$(cut -d' ' -f1 "$ZIP.sha256")
+          {
+            echo "Orange ${{ steps.version.outputs.version }} build ${{ steps.version.outputs.build }}, built from \`${GITHUB_SHA::7}\`."
+            echo
+            echo "**Install:** unzip, move \`Orange.app\` to Applications, then run once:"
+            echo
+            echo '```sh'
+            echo "xattr -dr com.apple.quarantine /Applications/Orange.app"
+            echo '```'
+            echo
+            echo "The app is ad-hoc signed and not notarized, so macOS Gatekeeper blocks it until the quarantine flag is removed."
+            echo
+            echo "SHA-256 \`$ZIP\`: \`$SHA\`"
+          } > notes.md
+          gh release create "$TAG" "$ZIP" "$ZIP.sha256" \
+            --target "$GITHUB_SHA" \
+            --title "Orange ${{ steps.version.outputs.version }} (build ${{ steps.version.outputs.build }})" \
+            --notes-file notes.md \
+            --latest

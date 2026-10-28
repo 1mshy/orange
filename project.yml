@@ -1,0 +1,47 @@
+name: Orange
+options:
+  bundleIdPrefix: org.orange-converter
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    CODE_SIGN_STYLE: Manual
+    CODE_SIGN_IDENTITY: "-"
+    DEVELOPMENT_TEAM: ""
+    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_APP_SANDBOX: NO
+    SWIFT_STRICT_CONCURRENCY: minimal
+targets:
+  Orange:
+    type: application
+    platform: macOS
+    sources:
+      - path: Orange
+        excludes:
+          - "Resources/Info.plist"
+    info:
+      path: Orange/Resources/Info.plist
+      properties:
+        CFBundleName: Orange
+        CFBundleDisplayName: Orange
+        CFBundleIdentifier: org.orange-converter.Orange
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        CFBundlePackageType: APPL
+        LSMinimumSystemVersion: "14.0"
+        LSUIElement: true
+        LSApplicationCategoryType: public.app-category.utilities
+        NSPrincipalClass: NSApplication
+        NSHumanReadableCopyright: "MIT License"
+        CFBundleIconName: AppIcon
+        NSAccentColorName: AccentColor
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.orange-converter.Orange
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        GENERATE_INFOPLIST_FILE: NO
