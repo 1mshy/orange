@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/media/app-icon.png" width="128" height="128" alt="Orange app icon: an orange with a leaf and a segmented wheel">
+</p>
+
 # Orange 🍊
 
 **The zero-click offline file converter for macOS, open source.**
@@ -16,6 +20,20 @@ Release the key and keep dragging: the wheel stays open until you drop or press
 Escape. Arrow keys choose a petal, Return applies it. No Accessibility
 permission is required: Orange watches the system drag pasteboard and polls
 modifier state the same way Tangerine does.
+
+## Preview
+
+The wheels below show a sample PNG with **JPG**, **Compress**, and **Float**
+selected. These UI previews are rendered from Orange's SwiftUI views.
+
+| ⇧ Convert formats | ⌘ File tools | ⌃ File actions |
+| --- | --- | --- |
+| ![Conversion wheel with JPG selected for a PNG image](docs/media/wheel-convert.png) | ![File tools wheel with Compress selected for a PNG image](docs/media/wheel-tools.png) | ![File actions wheel with Float selected](docs/media/wheel-actions.png) |
+
+Choose **Compress** to set a target size and optionally resize the image before
+running the tool:
+
+![Orange's compression controls for sunrise.png, with a 500 KB target and a 1920-pixel maximum dimension](docs/media/compress-options.png)
 
 ## Formats
 

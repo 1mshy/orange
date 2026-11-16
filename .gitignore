@@ -5,3 +5,5 @@ DerivedData/
 .DS_Store
 Tangerine.app/
 fixtures/
+.serena
+.claude

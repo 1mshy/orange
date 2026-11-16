@@ -8,9 +8,8 @@ final class MenuBarController: NSObject, NSMenuDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
         if let button = statusItem.button {
-            let image = NSImage(systemSymbolName: "circle.hexagongrid.circle", accessibilityDescription: "Orange")
-            image?.isTemplate = true
-            button.image = image
+            button.image = MenuBarIcon.make()
+            button.toolTip = "Orange"
         }
         let menu = NSMenu()
         menu.delegate = self
